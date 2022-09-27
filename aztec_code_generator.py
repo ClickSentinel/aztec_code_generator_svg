@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 """
     aztec_code_generator
@@ -13,6 +13,8 @@
 import math
 import numbers
 import sys
+#from matplotlib import pyplot
+# from matplotlib import pyplot
 
 try:
     from PIL import Image, ImageDraw
@@ -86,7 +88,7 @@ code_chars = {
         '\x1b', '\x1c', '\x1d', '\x1e', '\x1f', '@', '\\', '^', '_', '`', '|', '~', '\x7f', 'L/L', 'U/L', 'P/L', 'B/S'
     ],
     'punct': [
-        'FLG(n)', '\r', '\r\n', '. ', ', ', ': ', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.',
+        'FLG(n)', '\r', '\r\n', '. ', ', ', ': ', '!', '"', '1', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.',
         '/', ':', ';', '<', '=', '>', '?', '[', ']', '{', '}', 'U/L'
     ],
     'digit': [
@@ -564,6 +566,14 @@ class AztecCode(object):
             self.size, self.compact = find_suitable_matrix_size(self.data)
         self.__create_matrix()
         self.__encode_data()
+        
+        # print(self)
+        print(self.matrix)
+
+       # pyplot.figure(figsize=(19,19))
+       # pyplot.imshow(self.matrix)
+       # pyplot.show
+        aztec_array = self.matrix
 
     def __create_matrix(self):
         """Create Aztec code matrix with given size."""
@@ -571,8 +581,10 @@ class AztecCode(object):
         for _ in range(self.size):
             line = []
             for __ in range(self.size):
-                line.append(' ')
+                line.append('0')
             self.matrix.append(line)
+        # print(self.matrix)
+        
 
     def save(self, filename, module_size=1):
         """Save matrix to image file.
@@ -593,13 +605,22 @@ class AztecCode(object):
                 image_draw.rectangle(
                     (x * module_size, y * module_size,
                      x * module_size + module_size, y * module_size + module_size),
-                    fill=(0, 0, 0) if self.matrix[y][x] == '#' else (255, 255, 255))
+                    fill=(0, 0, 0) if self.matrix[y][x] == '1' else (255, 255, 255))
         image.save(filename)
+
+
+    def print_array(self):
+        print(self.matrix)
+        for line in self.matrix:
+            print('')
 
     def print_out(self):
         """Print out Aztec code matrix."""
         for line in self.matrix:
             print(''.join(x for x in line))
+
+        
+
 
     def __add_finder_pattern(self):
         """Add bulls-eye finder pattern."""
@@ -608,7 +629,7 @@ class AztecCode(object):
         for x in range(-ring_radius, ring_radius):
             for y in range(-ring_radius, ring_radius):
                 if (max(abs(x), abs(y)) + 1) % 2:
-                    self.matrix[center + y][center + x] = '#'
+                    self.matrix[center + y][center + x] = '1'
 
     def __add_orientation_marks(self):
         """Add orientation marks to matrix."""
@@ -616,14 +637,14 @@ class AztecCode(object):
         ring_radius = 5 if self.compact else 7
         # add orientation marks
         # left-top
-        self.matrix[center - ring_radius][center - ring_radius] = '#'
-        self.matrix[center - ring_radius + 1][center - ring_radius] = '#'
-        self.matrix[center - ring_radius][center - ring_radius + 1] = '#'
+        self.matrix[center - ring_radius][center - ring_radius] = '1'
+        self.matrix[center - ring_radius + 1][center - ring_radius] = '1'
+        self.matrix[center - ring_radius][center - ring_radius + 1] = '1'
         # right-top
-        self.matrix[center - ring_radius + 0][center + ring_radius + 0] = '#'
-        self.matrix[center - ring_radius + 1][center + ring_radius + 0] = '#'
+        self.matrix[center - ring_radius + 0][center + ring_radius + 0] = '1'
+        self.matrix[center - ring_radius + 1][center + ring_radius + 0] = '1'
         # right-down
-        self.matrix[center + ring_radius - 1][center + ring_radius + 0] = '#'
+        self.matrix[center + ring_radius - 1][center + ring_radius + 0] = '1'
 
     def __add_reference_grid(self):
         """Add reference grid to matrix."""
@@ -638,7 +659,7 @@ class AztecCode(object):
                     continue
                 # set pixel
                 if x % 16 == 0 or y % 16 == 0:
-                    val = '#' if (x + y + 1) % 2 != 0 else ' '
+                    val = '1' if (x + y + 1) % 2 != 0 else '0'
                     self.matrix[center + y][center + x] = val
 
     def __get_mode_message(self, layers_count, data_cw_count):
@@ -714,7 +735,7 @@ class AztecCode(object):
                 x = -ring_radius
                 y = ring_radius - index % side_size - 2
             # set pixel
-            self.matrix[center + y][center + x] = '#' if bit == '1' else ' '
+            self.matrix[center + y][center + x] = '1' if bit == '1' else '0'
             index += 1
 
     def __add_data(self, data):
@@ -758,7 +779,7 @@ class AztecCode(object):
         for i in range(0, len(full_bits), 2):
             num += 1
             max_num = ring_radius * 2 + layer_index * 4 + (4 if self.compact else 3)
-            bits_pair = ['#' if bit == '1' else ' ' for bit in full_bits[i:i + 2]]
+            bits_pair = ['1' if bit == '1' else '0' for bit in full_bits[i:i + 2]]
             if layer_index >= layers_count:
                 raise Exception('Maximum layer count for current size is exceeded!')
             if side == 'top':
@@ -839,6 +860,16 @@ class AztecCode(object):
         self.__add_reference_grid()
         data_cw_count = self.__add_data(self.data)
         self.__add_mode_info(data_cw_count)
+        
+
+        # for item in self.matrix:
+        #     result = item.replace('1','1')
+        #     print(result)
+
+
+        #self_list = [s.replace('1', '1') for s in self.matrix]
+
+        # print(self_lists)
 
 
 def main():
